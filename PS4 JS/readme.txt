@@ -1,0 +1,1 @@
+These JS files were for a project I was working on to test the PS4 JavaScript SDK to build a UI. From winter 2014 ago, but I wanted to keep them because it was an interesting experience having to build out a design and UI using purely JavaScript and to see how my thoughts on developing for the PS4 changed over time.

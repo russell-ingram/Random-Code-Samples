@@ -1,0 +1,124 @@
+<!-- A simple search engine that worked with a modified autocomplete and an external API to update and make suggestions based on what you were typing. Attempted to simulate google's behavior. This is the raw, unfinished version. Complete version was used for a demo later on and couldn't be shared here -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Testing Server</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/stylesheets/autocomplete.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/stylesheets/autocomplete.css">
+
+  </head>
+  <body>
+
+    <div class="wrapperBody">
+
+      <div class="col-lg-6 searchGroup">
+        <div class="input-group">
+          <input type="text" class="form-control bigInput" id="tags" placeholder="Search for..." autocomplete="off">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="submit" id="searchBtn">Search!</button>
+          </span>
+        </div><!-- /input-group -->
+      </div><!-- /.col-lg-6 -->
+      <div id="outputBox">
+        <p id="outputContent">Choose an option and the results will display here.</p>
+      </div>
+
+    </div>
+
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="/javascripts/jquery.autocomplete.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      var availableTags = [];
+      var tagsValue = '';
+      var numOfTags = 0;
+      var tags = [];
+
+    $('#tags').keypress(function(e){
+      if(e.keyCode==13) {
+        $('#searchBtn').click();
+      }
+    });
+
+      $("#tags").keyup(function() {
+        if (numOfTags > 0) {
+          tagsValue = $(this).val().slice(tags[0].value.length + 1);
+          console.log('new tagV =', tagsValue)
+        }
+        else {
+          tagsValue = $( this ).val();
+        }
+      }).keyup();
+
+
+      $("#tags").autocomplete({
+        serviceUrl: '//192.168.0.126/api/autocomplete' + tagsValue,
+        minChars: 3,
+        lookupLimit: 10,
+        tabDisabled: true,
+        delimiter: ' ',
+        onSelect: function(suggestion) {
+          numOfTags++;
+          tags.push(suggestion);
+        }
+      });
+
+
+      $('#searchBtn').click(function() {
+        var x = $('#tags').val()
+        console.log(x);
+        searchFunction(x);
+      })
+
+
+      function searchFunction(item) {
+        var searchKey;
+        $('.searchGroup').addClass('active');
+        $('#outputBox').addClass('active');
+        if (item.value) {
+          searchKey = item.value;
+        }
+        else {
+          searchKey = item;
+        }
+        $('#outputContent').html("<h1>Search Results for: "+searchKey+"</h1>");
+        console.log("//192.168.0.126/api/search?q="+searchKey);
+        $.ajax({
+          type: 'GET',
+          url: "//192.168.0.126/api/search?q="+searchKey,
+          dataType: 'xml',
+          success: function(res) {
+            var results = $(res).find("string").text();
+            var jsonArray = JSON.parse(results);
+            for (i = 0; i < jsonArray.length; i++) {
+              if (jsonArray[i]) {
+                var url = "link"+jsonArray[i].EventTimeOfDay+"&mediaAssetId="+jsonArray[i].MediaAssetLabel.toString();
+                var dateTime = jsonArray[i].MatchDate;
+                var date = dateTime.slice(8,10) + " "+ dateTime.slice(5,7) + ", " +dateTime.slice(0,4)
+                $("#outputContent").append("<div class='searchResult'><div class='searchResultTitle'>"+"<div class='searchResultDiv'>"+jsonArray[i].MatchTitle+"</div><div class='searchResultDiv'>"+date+"</div></div><div class='searchResultImg'><img src='"+url+"''></div></div>");
+              }
+            }
+
+          },
+          error: function(e) {
+            console.log("error");
+          }
+        })
+      }
+
+
+
+      // $("#tags").hide();
+    });
+  </script>
+  </body>
+
+</html>
